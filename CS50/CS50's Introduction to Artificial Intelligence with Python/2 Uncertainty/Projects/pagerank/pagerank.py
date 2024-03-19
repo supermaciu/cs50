@@ -11,10 +11,10 @@ def main():
     if len(sys.argv) != 2:
         sys.exit("Usage: python pagerank.py corpus")
     corpus = crawl(sys.argv[1])
-    # ranks = sample_pagerank(corpus, DAMPING, SAMPLES)
-    # print(f"PageRank Results from Sampling (n = {SAMPLES})")
-    # for page in sorted(ranks):
-    #     print(f"  {page}: {ranks[page]:.4f}")
+    ranks = sample_pagerank(corpus, DAMPING, SAMPLES)
+    print(f"PageRank Results from Sampling (n = {SAMPLES})")
+    for page in sorted(ranks):
+        print(f"  {page}: {ranks[page]:.4f}")
     ranks = iterate_pagerank(corpus, DAMPING)
     print(f"PageRank Results from Iteration")
     for page in sorted(ranks):
@@ -57,32 +57,24 @@ def transition_model(corpus, page, damping_factor):
     linked to by `page`. With probability `1 - damping_factor`, choose
     a link at random chosen from all pages in the corpus.
     """
-    
-    # Creating a Markov chain
-    chain = []
+    probabilites = dict()
 
-    # Checking if page has no outgoing links, appends to chain page choosen with equal probability from corpus
-    if len(corpus[page]) == 0:
-        for i in range(SAMPLES):
-            chain.append(random.choice(list(corpus.keys())))
-    else:
-        for i in range(SAMPLES):
-            damping = random.choices([False, True], [damping_factor, 1 - damping_factor])[0]
+    for p in corpus:
+        if p == page or p not in corpus[page]:
+            probabilites[p] = (1.0 - damping_factor) / len(corpus)
+        else:
+            # Equation derived from probability marginalization:
+            # p - calculated page probability knowing that we are on page
+            # damping - damping factor (0.85)
+            # NumberOfLinks(page) - number of links on page, if calculated p is on page,
+            # if not probability is calculated the same as page
+            # N = number of pages in corpus
 
-            if damping:
-                # Choosing a page with equal probability along all of corpus 
-                chain.append(random.choice(list(corpus.keys())))
-            else:
-                # Choosing a page with equal probability between pages that have links from this page
-                chain.append(random.choice(list(corpus[page])))
+            # P(p) = P(p and damping) + P(p and not damping) =
+            # = 1 / NumberOfLinks(page) + 1 / N
+            probabilites[p] = damping_factor / len(corpus[page]) + (1 - damping_factor) / len(corpus)
 
-    distribution = dict()
-
-    # Returning dictionary of probability distribution among all pages from corpus
-    for key in corpus.keys():
-        distribution[key] = chain.count(key) / len(chain)
-
-    return distribution
+    return probabilites
 
 
 def sample_pagerank(corpus, damping_factor, n):
@@ -97,13 +89,12 @@ def sample_pagerank(corpus, damping_factor, n):
 
     distribution = dict()
     
-    for page in corpus.keys():
-        distribution[page] = 0
+    for p in corpus.keys():
+        distribution[p] = 0
 
     # Starting sample
     sample = ""
 
-    n = 1000
     for i in range(n):
         if sample == "":
             sample = random.choice(list(corpus.keys()))
@@ -113,8 +104,8 @@ def sample_pagerank(corpus, damping_factor, n):
         distribution[sample] += 1
         tm = transition_model(corpus, sample, damping_factor)
     
-    for page in corpus.keys():
-        distribution[page] /= n
+    for p in corpus.keys():
+        distribution[p] /= n
 
     return distribution
             
@@ -130,9 +121,9 @@ def iterate_pagerank(corpus, damping_factor):
     PageRank values should sum to 1.
     """
 
-    converging = True 
     distribution = dict()
     prev_distribution = dict()
+    converging = True
 
     for page in corpus.keys():
         distribution[page] = 1 / len(corpus.keys())
@@ -140,9 +131,8 @@ def iterate_pagerank(corpus, damping_factor):
 
     eps = 0.001
 
-    # PageRank iterative formula
+    # Iterative formula
     for i in range(10):
-        print(distribution)
         for p in corpus.keys():
             links = 0
             for i in corpus[p]:
@@ -159,10 +149,10 @@ def iterate_pagerank(corpus, damping_factor):
             else:
                 converging = True
         prev_distribution = distribution
-    
-    return distribution
 
-    
+        print(distribution)
+
+    return distribution
 
 if __name__ == "__main__":
     main()

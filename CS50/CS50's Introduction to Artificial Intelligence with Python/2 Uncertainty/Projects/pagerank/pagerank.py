@@ -122,36 +122,30 @@ def iterate_pagerank(corpus, damping_factor):
     """
 
     distribution = dict()
-    prev_distribution = dict()
-    converging = True
+    corpus = {"1": {}, "2": {"1"}, "3": {}}
+    eps = 0.001
 
     for page in corpus.keys():
         distribution[page] = 1 / len(corpus)
-        prev_distribution[page] = 0
 
-    eps = 0.001
+    pageLinks = dict()
+    for page in corpus.keys():
+        pageLinks[page] = set()
+        for i in corpus.keys():
+            if page in corpus[i]:
+                pageLinks[page].add(i)
 
     # Iterative formula
-    for i in range(100):
+    for i in range(10000):
         for p in corpus.keys():
             sigma = 0
-            for i in corpus[p]:
-                if len(corpus[i]) != 0:
-                    sigma += distribution[i] / len(corpus[i])
-                else:
-                    sigma += distribution[i] / len(corpus)
+            for i in pageLinks[p]:
+                sigma += distribution[i] / len(corpus[i])
             
-            if len(corpus[p]) == 0:
-                sigma = 1 / len(corpus)
-            
+            if len(pageLinks[p]) == 0:
+                # count it as having links to every page and itself
+
             distribution[p] = (1 - damping_factor) / len(corpus) + damping_factor * sigma
-        
-        for page in corpus.keys():
-            if prev_distribution[page] - distribution[page] < eps:
-                converging = False
-            else:
-                converging = True
-        prev_distribution = distribution
 
     return distribution
 

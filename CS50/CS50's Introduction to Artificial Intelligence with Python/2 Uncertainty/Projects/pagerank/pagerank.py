@@ -126,22 +126,25 @@ def iterate_pagerank(corpus, damping_factor):
     converging = True
 
     for page in corpus.keys():
-        distribution[page] = 1 / len(corpus.keys())
+        distribution[page] = 1 / len(corpus)
         prev_distribution[page] = 0
 
     eps = 0.001
 
     # Iterative formula
-    for i in range(10):
+    for i in range(100):
         for p in corpus.keys():
-            links = 0
+            sigma = 0
             for i in corpus[p]:
-                links += distribution[i] / len(corpus[p])
+                if len(corpus[i]) != 0:
+                    sigma += distribution[i] / len(corpus[i])
+                else:
+                    sigma += distribution[i] / len(corpus)
             
             if len(corpus[p]) == 0:
-                links = 1 / len(corpus.keys())
-
-            distribution[p] = (1 - damping_factor) / len(corpus.keys()) + damping_factor * links
+                sigma = 1 / len(corpus)
+            
+            distribution[p] = (1 - damping_factor) / len(corpus) + damping_factor * sigma
         
         for page in corpus.keys():
             if prev_distribution[page] - distribution[page] < eps:
@@ -149,8 +152,6 @@ def iterate_pagerank(corpus, damping_factor):
             else:
                 converging = True
         prev_distribution = distribution
-
-        print(distribution)
 
     return distribution
 

@@ -2,6 +2,7 @@ import os
 import random
 import re
 import sys
+import copy
 
 DAMPING = 0.85
 SAMPLES = 10000
@@ -72,7 +73,7 @@ def transition_model(corpus, page, damping_factor):
 
             # P(p) = P(p and damping) + P(p and not damping) =
             # = 1 / NumberOfLinks(page) + 1 / N
-            probabilites[p] = damping_factor / len(corpus[page]) + (1 - damping_factor) / len(corpus)
+            probabilites[p] = damping_factor/len(corpus[page]) + (1 - damping_factor)/len(corpus)
 
     return probabilites
 
@@ -89,26 +90,23 @@ def sample_pagerank(corpus, damping_factor, n):
 
     distribution = dict()
     
+    # Setting sample count / probability distribution
     for p in corpus.keys():
         distribution[p] = 0
 
     # Starting sample
-    sample = ""
+    sample = random.choice(list(corpus.keys()))
 
     for i in range(n):
-        if sample == "":
-            sample = random.choice(list(corpus.keys()))
-        else:
-            sample = random.choices(list(tm.keys()), list(tm.values()))[0]
-
         distribution[sample] += 1
         tm = transition_model(corpus, sample, damping_factor)
+
+        sample = random.choices(list(tm.keys()), list(tm.values()))[0]
     
     for p in corpus.keys():
         distribution[p] /= n
 
     return distribution
-            
 
 
 def iterate_pagerank(corpus, damping_factor):
@@ -122,18 +120,17 @@ def iterate_pagerank(corpus, damping_factor):
     """
 
     distribution = dict()
-    
-    eps = 0.001
-
-
-    # testing
-    corpus = {'1': {'2'}, '2': {'1', '3'}, '3': {'5', '4', '2'}, '4': {'1', '2'}, '5': set()}
-
-
+    new_distribution = dict()
     emptyPages = set()
 
+    converged = False
+    # Accuracy for the convergence
+    eps = 0.001
+
+    # Setting initial values
     for page in corpus.keys():
         distribution[page] = 1 / len(corpus)
+        new_distribution[page] = 1 / len(corpus)
 
     # Getting pages that link to each one
     pageLinks = dict()
@@ -148,24 +145,29 @@ def iterate_pagerank(corpus, damping_factor):
                 pageLinks[page].add(i)
 
     # Iterative formula
-    for i in range(10000):
+    while not converged:
         for p in corpus.keys():
             sigma = 0
             for i in pageLinks[p]:
                 if len(corpus[i]) != 0:
                     sigma += distribution[i] / len(corpus[i])
             
+            # Handling pages with no links by adding it's probability divided by length of the corpus
             for i in emptyPages:
                 sigma += distribution[i] / len(corpus)
             
-            distribution[p] = (1 - damping_factor) / len(corpus) + damping_factor * sigma
+            new_distribution[p] = (1 - damping_factor) / len(corpus) + damping_factor * sigma
 
-            # if len(corpus[p]) == 0:
-            #     for i in corpus:
-            #         distribution[i] += distribution[p] / len(corpus)
-
-    print(sum(distribution.values()))
+        # Checking for difference between new values and old values to see if they are converged
+        for p in corpus.keys():
+            if abs(new_distribution[page] - distribution[page]) < eps:
+                converged = True
+            else:
+                converged = False
+        distribution = copy.deepcopy(new_distribution)
+    
     return distribution
+
 
 if __name__ == "__main__":
     main()

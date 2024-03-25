@@ -2,6 +2,9 @@ import csv
 import itertools
 import sys
 
+# to delete
+import pprint
+
 PROBS = {
 
     # Unconditional probabilities for having gene
@@ -39,7 +42,7 @@ PROBS = {
 
 def main():
 
-    # Check for proper usage
+    # Check for proper usage and load data
     if len(sys.argv) != 2:
         sys.exit("Usage: python heredity.py data.csv")
     people = load_data(sys.argv[1])
@@ -59,6 +62,15 @@ def main():
         }
         for person in people
     }
+
+    print("people:")
+    pprint.pprint(people)
+    print("prob:")
+    pprint.pprint(probabilities)
+
+    print("result:", joint_probability(people, {"Harry"}, {"James"}, {"James"}))
+    print("done")
+    print("\n\n\n")
 
     # Loop over all sets of people who might have the trait
     names = set(people)
@@ -94,7 +106,7 @@ def main():
                 print(f"    {value}: {p:.4f}")
 
 
-def load_data(filename):
+def load_data(filename: str) -> dict:
     """
     Load gene and trait data from a file into a dictionary.
     File assumed to be a CSV containing fields name, mother, father, trait.
@@ -116,7 +128,7 @@ def load_data(filename):
     return data
 
 
-def powerset(s):
+def powerset(s: set) -> list[set]:
     """
     Return a list of all possible subsets of set s.
     """
@@ -128,7 +140,7 @@ def powerset(s):
     ]
 
 
-def joint_probability(people, one_gene, two_genes, have_trait):
+def joint_probability(people: dict, one_gene: set, two_genes: set, have_trait: set):
     """
     Compute and return a joint probability.
 
@@ -137,12 +149,83 @@ def joint_probability(people, one_gene, two_genes, have_trait):
         * everyone in set `two_genes` has two copies of the gene, and
         * everyone not in `one_gene` or `two_gene` does not have the gene, and
         * everyone in set `have_trait` has the trait, and
-        * everyone not in set` have_trait` does not have the trait.
+        * everyone not in set `have_trait` does not have the trait.
     """
-    raise NotImplementedError
+
+    # TODO:
+    # - consider father mother relations every time 
+
+    # every person considered
+    persons = set(people.keys())
+
+    # persons having no gene
+    zero_gene = (persons - one_gene).intersection(persons - two_genes)
+
+    # everyone in set `one_gene` has one copy of the gene
+    one_gene_prob = 1
+    
+    for person in one_gene:
+        f = people[person]["father"]
+        m = people[person]["mother"]
+
+        this_gene_prob = 0
+
+        if f in zero_gene:
+            this_gene_prob += PROBS["mutation"] * PROBS["mutation"]
+        elif f in one_gene:
+            this_gene_prob += 0.5 # apply mutation
+        elif f in two_genes:
+            this_gene_prob += (1 - PROBS["mutation"]) * (1 - PROBS["mutation"])
+
+        if m in zero_gene:
+            this_gene_prob += PROBS["mutation"] * PROBS["mutation"]
+        elif m in one_gene:
+            this_gene_prob += 0.5 # apply mutation
+        elif m in two_genes:
+            this_gene_prob += (1 - PROBS["mutation"]) * (1 - PROBS["mutation"])
+
+        one_gene_prob *= this_gene_prob
+
+    # everyone in set `two_genes` has two copies of the gene
+    two_genes_prob = 1
+
+    for person in two_genes:
+        two_genes_prob *= PROBS["gene"][2]
+
+    # everyone not in `one_gene` or `two_gene` does not have the gene
+    zero_gene_prob = 1
+    
+    for person in zero_gene:
+        zero_gene_prob *= PROBS["gene"][0]
+
+    # everyone in set `have_trait` has the trait
+    have_trait_prob = 1
+
+    for person in have_trait:
+        if person in zero_gene:
+            have_trait_prob *= PROBS["trait"][0][True]
+        elif person in one_gene:
+            have_trait_prob *= PROBS["trait"][1][True]
+        elif person in two_genes:
+            have_trait_prob *= PROBS["trait"][2][True]
+
+    # everyone not in set `have_trait` does not have the trait
+    no_trait = persons - have_trait
+    no_trait_prob = 1
+
+    for person in no_trait:
+        if person in zero_gene:
+            no_trait_prob *= PROBS["trait"][0][False]
+        elif person in one_gene:
+            no_trait_prob *= PROBS["trait"][1][False]
+        elif person in two_genes:
+            no_trait_prob *= PROBS["trait"][2][False]
+    
+    result = one_gene_prob * two_genes_prob * zero_gene_prob * have_trait_prob * no_trait_prob
+    return result
 
 
-def update(probabilities, one_gene, two_genes, have_trait, p):
+def update(probabilities: dict, one_gene: set, two_genes: set, have_trait: set, p) -> None:
     """
     Add to `probabilities` a new joint probability `p`.
     Each person should have their "gene" and "trait" distributions updated.
@@ -152,7 +235,7 @@ def update(probabilities, one_gene, two_genes, have_trait, p):
     raise NotImplementedError
 
 
-def normalize(probabilities):
+def normalize(probabilities: dict) -> None:
     """
     Update `probabilities` such that each probability distribution
     is normalized (i.e., sums to 1, with relative proportions the same).

@@ -139,7 +139,6 @@ def powerset(s: set) -> list[set]:
         )
     ]
 
-
 def joint_probability(people: dict, one_gene: set, two_genes: set, have_trait: set):
     """
     Compute and return a joint probability.
@@ -232,7 +231,9 @@ def update(probabilities: dict, one_gene: set, two_genes: set, have_trait: set, 
     Which value for each distribution is updated depends on whether
     the person is in `have_gene` and `have_trait`, respectively.
     """
-    raise NotImplementedError
+    
+    for person in one_gene:
+        probabilities[person]["gene"] += p
 
 
 def normalize(probabilities: dict) -> None:

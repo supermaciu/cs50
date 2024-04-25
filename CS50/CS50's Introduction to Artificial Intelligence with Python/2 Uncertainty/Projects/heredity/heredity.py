@@ -2,9 +2,6 @@ import csv
 import itertools
 import sys
 
-# to delete
-import pprint
-
 PROBS = {
 
     # Unconditional probabilities for having gene
@@ -63,19 +60,6 @@ def main():
         for person in people
     }
 
-    print("people:")
-    pprint.pprint(people)
-    print("prob:")
-    pprint.pprint(probabilities)
-    print("\n")
-    
-    print("0 0:", PROBS["mutation"] * (1 - PROBS["mutation"]) + PROBS["mutation"] * (1 - PROBS["mutation"]))
-    print("1 1:", 0.5 * (1 - PROBS["mutation"]) + 0.5 * (1 - PROBS["mutation"]))
-    print("2 2:", (1 - PROBS["mutation"]) * PROBS["mutation"] + (1 - PROBS["mutation"]) * PROBS["mutation"])
-    # print("1 0:", 0.5 * (1 - PROBS["mutation"]) * (1 - PROBS["mutation"]) + PROBS["mutation"] * PROBS["mutation"])
-    print("2 0:", (1 - PROBS["mutation"]) *  (1 - PROBS["mutation"]) + PROBS["mutation"] *  PROBS["mutation"])
-    # print("2 1:", (1 - PROBS["mutation"]) * (1 - PROBS["mutation"]) + 0.5 * PROBS["mutation"])
-
     # Loop over all sets of people who might have the trait
     names = set(people)
     for have_trait in powerset(names):
@@ -94,7 +78,6 @@ def main():
             for two_genes in powerset(names - one_gene):
 
                 # Update probabilities with new joint probability
-                print(f"joint_probability(people, {one_gene}, {two_genes}, {have_trait}) =", joint_probability(people, one_gene, two_genes, have_trait))
                 p = joint_probability(people, one_gene, two_genes, have_trait)
                 update(probabilities, one_gene, two_genes, have_trait, p)
 
@@ -144,6 +127,7 @@ def powerset(s: set) -> list[set]:
         )
     ]
 
+
 def joint_probability(people: dict, one_gene: set, two_genes: set, have_trait: set):
     """
     Compute and return a joint probability.
@@ -176,15 +160,15 @@ def joint_probability(people: dict, one_gene: set, two_genes: set, have_trait: s
         if f in zero_gene and m in zero_gene:
             zero_gene_prob *= (1 - PROBS["mutation"]) * (1 - PROBS["mutation"])
         elif f in one_gene and m in one_gene:
-            zero_gene_prob *= PROBS["mutation"] * PROBS["mutation"]
+            zero_gene_prob *= 0.5 * 0.5
         elif f in two_genes and m in two_genes:
             zero_gene_prob *= PROBS["mutation"] * PROBS["mutation"]
         elif f in one_gene and m in zero_gene or m in one_gene and f in zero_gene:
-            zero_gene_prob *= PROBS["mutation"] * (1 - PROBS["mutation"])
+            zero_gene_prob *= 0.5 * (1 - PROBS["mutation"])
         elif f in two_genes and m in zero_gene or m in two_genes and f in zero_gene:
             zero_gene_prob *= PROBS["mutation"] * (1 - PROBS["mutation"])
         elif f in two_genes and m in one_gene or m in two_genes and f in one_gene:
-            zero_gene_prob *= PROBS["mutation"] * PROBS["mutation"]
+            zero_gene_prob *= PROBS["mutation"] * 0.5
 
     # everyone in set `one_gene` has one copy of the gene
     one_gene_prob = 1
@@ -200,16 +184,15 @@ def joint_probability(people: dict, one_gene: set, two_genes: set, have_trait: s
         if f in zero_gene and m in zero_gene:
             one_gene_prob *= PROBS["mutation"] * (1 - PROBS["mutation"]) + PROBS["mutation"] * (1 - PROBS["mutation"])
         elif f in one_gene and m in one_gene:
-            one_gene_prob *= 0.5 * (1 - PROBS["mutation"]) * PROBS["mutation"] + 0.5 * (1 - PROBS["mutation"]) * PROBS["mutation"]
+            one_gene_prob *= 0.5 * 0.5 + 0.5 * 0.5
         elif f in two_genes and m in two_genes:
             one_gene_prob *= (1 - PROBS["mutation"]) * PROBS["mutation"] + (1 - PROBS["mutation"]) * PROBS["mutation"]
         elif f in one_gene and m in zero_gene or m in one_gene and f in zero_gene:
-            one_gene_prob *= 0.5 * (1 - PROBS["mutation"]) * (1 - PROBS["mutation"]) + PROBS["mutation"] * PROBS["mutation"]
+            one_gene_prob *= 0.5 * (1 - PROBS["mutation"]) + 0.5 * (1 - PROBS["mutation"]) * PROBS["mutation"]
         elif f in two_genes and m in zero_gene or m in two_genes and f in zero_gene:
             one_gene_prob *= (1 - PROBS["mutation"]) * (1 - PROBS["mutation"]) + PROBS["mutation"] * PROBS["mutation"]
         elif f in two_genes and m in one_gene or m in two_genes and f in one_gene:
-            one_gene_prob *= (1 - PROBS["mutation"]) * PROBS["mutation"] + PROBS["mutation"] * 0.5 * (1 - PROBS["mutation"])
-
+            one_gene_prob *= (1 - PROBS["mutation"]) * 0.5 + 0.5 * (1 - PROBS["mutation"]) * PROBS["mutation"]
 
     # everyone in set `two_genes` has two copies of the gene
     two_genes_prob = 1
@@ -225,15 +208,15 @@ def joint_probability(people: dict, one_gene: set, two_genes: set, have_trait: s
         if f in zero_gene and m in zero_gene:
             two_genes_prob *= PROBS["mutation"] * PROBS["mutation"]
         elif f in one_gene and m in one_gene:
-            two_genes_prob *= 0.5 * (1 - PROBS["mutation"]) * 0.5 * (1 - PROBS["mutation"])
+            two_genes_prob *= 0.5 * 0.5
         elif f in two_genes and m in two_genes:
             two_genes_prob *= (1 - PROBS["mutation"]) * (1 - PROBS["mutation"])
         elif f in one_gene and m in zero_gene or m in one_gene and f in zero_gene:
-            two_genes_prob *= 0.5 * (1 - PROBS["mutation"]) * PROBS["mutation"]
+            two_genes_prob *= 0.5 * PROBS["mutation"]
         elif f in two_genes and m in zero_gene or m in two_genes and f in zero_gene:
             two_genes_prob *= (1 - PROBS["mutation"]) * PROBS["mutation"]
         elif f in two_genes and m in one_gene or m in two_genes and f in one_gene:
-            two_genes_prob *= (1 - PROBS["mutation"]) * 0.5 * (1 - PROBS["mutation"])
+            two_genes_prob *= (1 - PROBS["mutation"]) * 0.5
 
     # everyone in set `have_trait` has the trait
     have_trait_prob = 1
@@ -289,6 +272,7 @@ def update(probabilities: dict, one_gene: set, two_genes: set, have_trait: set, 
     for person in no_trait:
         probabilities[person]["trait"][False] += p
 
+
 def normalize(probabilities: dict) -> None:
     """
     Update `probabilities` such that each probability distribution
@@ -314,6 +298,7 @@ def normalize(probabilities: dict) -> None:
 
             probabilities[person]["trait"][True] *= alpha
             probabilities[person]["trait"][False] = (1 - probabilities[person]["trait"][True])
+
 
 if __name__ == "__main__":
     main()

@@ -173,7 +173,18 @@ def joint_probability(people: dict, one_gene: set, two_genes: set, have_trait: s
             zero_gene_prob *= PROBS["gene"][0]
             continue
 
-        # parents
+        if f in zero_gene and m in zero_gene:
+            zero_gene_prob *= (1 - PROBS["mutation"]) * (1 - PROBS["mutation"])
+        elif f in one_gene and m in one_gene:
+            zero_gene_prob *= PROBS["mutation"] * PROBS["mutation"]
+        elif f in two_genes and m in two_genes:
+            zero_gene_prob *= PROBS["mutation"] * PROBS["mutation"]
+        elif f in one_gene and m in zero_gene or m in one_gene and f in zero_gene:
+            zero_gene_prob *= PROBS["mutation"] * (1 - PROBS["mutation"])
+        elif f in two_genes and m in zero_gene or m in two_genes and f in zero_gene:
+            zero_gene_prob *= PROBS["mutation"] * (1 - PROBS["mutation"])
+        elif f in two_genes and m in one_gene or m in two_genes and f in one_gene:
+            zero_gene_prob *= PROBS["mutation"] * PROBS["mutation"]
 
     # everyone in set `one_gene` has one copy of the gene
     one_gene_prob = 1
@@ -186,40 +197,18 @@ def joint_probability(people: dict, one_gene: set, two_genes: set, have_trait: s
             one_gene_prob *= PROBS["gene"][1]
             continue
 
-        # P(father_gene v mother_gene) = P(fg) + P(mg)
-        # 1. If father has 0 copies and mother has 0 copies:
-        # * P(g) = mutation * (1 - mutation) = chance for father/mother gene to mutate to 1 copy * the change for mother/father gene to not mutate, stay at 0 copies
-        #
-        # 2. If father has 1 copy and mother has 1 copy:
-        # * P(g) = 0.5 * (1 - mutation) = the chance for passing 1 copy over * the chance for it to not mutate to 0 copies
-        #
-        # 3. If father has 2 copies and mother has 2 copies:
-        #
-        #
-        # 4. If father has 1 copy and mother has 0 copies:
-        # * P(fg) = 0.5 * (1 - mutation) = chance for passing for 1 copy * chance for mother gene not to mutate
-        # * P(mg) = mutation * mutation
-        #
-        # 5. If father has 2 copies and mother has 0 copies:
-        # * P(fg) = (1 - mutation) * (1 - mutation) = chance for father gene to not mutate, stay at 2 copies therefore passing over 1 copy * chance for mother to not mutate, stay at 0 copies
-        # * P(mg) = mutation * mutation = chance for father gene to mutate to 0 copies * chance for mother gene to mutate to target gene
-        #
-        # 6. If father has 2 copies and mother has 1 copy:
-        # * P(fg) = (1 - mutation) * (1 - mutation) = the chance for father gene to not mutate * not mutate / mutate?
-        # * P(mg) = 0.5 * mutate = the chance for passing for 1 copy * the chance for father gene to mutate to target gene
-
         if f in zero_gene and m in zero_gene:
-            one_gene_prob *= PROBS["mutation"] * PROBS["mutation"] + PROBS["mutation"] * PROBS["mutation"]
+            one_gene_prob *= PROBS["mutation"] * (1 - PROBS["mutation"]) + PROBS["mutation"] * (1 - PROBS["mutation"])
         elif f in one_gene and m in one_gene:
-            one_gene_prob *= 0.5 * (1 - PROBS["mutation"]) * (1 - PROBS["mutation"]) + 0.5 * (1 - PROBS["mutation"]) * (1 - PROBS["mutation"])
+            one_gene_prob *= 0.5 * (1 - PROBS["mutation"]) * PROBS["mutation"] + 0.5 * (1 - PROBS["mutation"]) * PROBS["mutation"]
         elif f in two_genes and m in two_genes:
-            one_gene_prob *= (1 - PROBS["mutation"]) * (1 - PROBS["mutation"]) + (1 - PROBS["mutation"]) * (1 - PROBS["mutation"])
+            one_gene_prob *= (1 - PROBS["mutation"]) * PROBS["mutation"] + (1 - PROBS["mutation"]) * PROBS["mutation"]
         elif f in one_gene and m in zero_gene or m in one_gene and f in zero_gene:
             one_gene_prob *= 0.5 * (1 - PROBS["mutation"]) * (1 - PROBS["mutation"]) + PROBS["mutation"] * PROBS["mutation"]
         elif f in two_genes and m in zero_gene or m in two_genes and f in zero_gene:
             one_gene_prob *= (1 - PROBS["mutation"]) * (1 - PROBS["mutation"]) + PROBS["mutation"] * PROBS["mutation"]
         elif f in two_genes and m in one_gene or m in two_genes and f in one_gene:
-            one_gene_prob *= (1 - PROBS["mutation"]) * (1 - PROBS["mutation"]) + 0.5 * PROBS["mutation"] * PROBS["mutation"]
+            one_gene_prob *= (1 - PROBS["mutation"]) * PROBS["mutation"] + PROBS["mutation"] * 0.5 * (1 - PROBS["mutation"])
 
 
     # everyone in set `two_genes` has two copies of the gene
@@ -233,7 +222,18 @@ def joint_probability(people: dict, one_gene: set, two_genes: set, have_trait: s
             two_genes_prob *= PROBS["gene"][2]
             continue
 
-        # parents
+        if f in zero_gene and m in zero_gene:
+            two_genes_prob *= PROBS["mutation"] * PROBS["mutation"]
+        elif f in one_gene and m in one_gene:
+            two_genes_prob *= 0.5 * (1 - PROBS["mutation"]) * 0.5 * (1 - PROBS["mutation"])
+        elif f in two_genes and m in two_genes:
+            two_genes_prob *= (1 - PROBS["mutation"]) * (1 - PROBS["mutation"])
+        elif f in one_gene and m in zero_gene or m in one_gene and f in zero_gene:
+            two_genes_prob *= 0.5 * (1 - PROBS["mutation"]) * PROBS["mutation"]
+        elif f in two_genes and m in zero_gene or m in two_genes and f in zero_gene:
+            two_genes_prob *= (1 - PROBS["mutation"]) * PROBS["mutation"]
+        elif f in two_genes and m in one_gene or m in two_genes and f in one_gene:
+            two_genes_prob *= (1 - PROBS["mutation"]) * 0.5 * (1 - PROBS["mutation"])
 
     # everyone in set `have_trait` has the trait
     have_trait_prob = 1

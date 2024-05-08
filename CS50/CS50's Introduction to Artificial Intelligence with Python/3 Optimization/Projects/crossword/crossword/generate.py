@@ -1,9 +1,8 @@
 import sys
+import copy
 
 from crossword import *
 
-# to delete
-from pprint import pprint as pp
 
 class CrosswordCreator():
 
@@ -214,20 +213,20 @@ class CrosswordCreator():
         """
         # Create a dictionary of values and its quantity of instances in all of neighbors' domains
         # except values that are already assigned
-        unassigned = self.domains[var] - set(assignment.values())
+        unassigned_values = self.domains[var] - set(assignment.values())
         values = {
-            word:  0
-            for word in unassigned
+            word: 0
+            for word in unassigned_values
         }
 
         for neighbor in self.crossword.neighbors(var):
             for word in self.domains[neighbor]:
                 if word in values.keys():
                     values[word] += 1
-        
+
         # Return a list of values sorted by the descending quantity,
         # first value to have the least instances in all of neighbors' domains
-        return list(dict(sorted(values.items(), key=lambda x: x[1], reverse=True)).keys())
+        return list(dict(sorted(values.items(), key=lambda x: x[1])).keys())
 
     def select_unassigned_variable(self, assignment: dict[Variable, str]):
         """
@@ -238,45 +237,11 @@ class CrosswordCreator():
         return values.
         """
         # Get all unassigned variables
-        unassigned = self.crossword.variables - set(assignment.keys())
+        unassigned_variables = self.crossword.variables - assignment.keys()
 
-        if len(unassigned) == 0:
-            return None
-
-        # Minimum remaining values, variables with the smallest domain heuristic
-        mrvs = set()
-
-        # Get all possible MRVs
-        for var in unassigned:
-            if len(mrvs) == 0:
-                mrvs.add(var)
-                continue
-            
-            mrv = list(mrvs)[0]
-            if len(self.domains[var]) < len(self.domains[mrv]):
-                mrvs.clear()
-                mrvs.add(var)
-            elif len(self.domains[var]) == len(self.domains[mrv]):
-                mrvs.add(var)
-        
-        # Highest degree variables, variables with the most arcs/connections/neighbors
-        highest = set()
-
-        # Select the variable with the highest degree, a variable with the most neighbors
-        for var in mrvs:
-            if len(highest) == 0:
-                highest.add(var)
-                continue
-            
-            h = list(highest)[0]
-            if len(self.crossword.neighbors(var)) > len(self.crossword.neighbors(h)):
-                highest.clear()
-                highest.add(var)
-            elif len(self.crossword.neighbors(var)) == len(self.crossword.neighbors(h)):
-                highest.add(var)
-
-        return list(highest)[0]
-
+        return sorted(unassigned_variables,
+                      key=lambda v: (len(self.domains[v]),  # Sorting by minimum remaining values (MRV) ascending
+                                     -len(self.crossword.neighbors(v))))[0]  # Sorting by highest degree descending
 
     def backtrack(self, assignment: dict[Variable, str]):
         """
@@ -295,20 +260,17 @@ class CrosswordCreator():
         for val in self.order_domain_values(var, assignment):
             if self.consistent(assignment):
                 assignment[var] = val
-                # infereces = self.ac3(????????)
-            
+
                 result = self.backtrack(assignment)
                 
                 if result is not None:
                     return result
-                
-            # correct?
-            try:
-                assignment.pop(var)
-            except:
-                pass
         
+            # Deleting most recently added variable = value pair
+            assignment.popitem()
+
         return None
+
 
 def main():
 

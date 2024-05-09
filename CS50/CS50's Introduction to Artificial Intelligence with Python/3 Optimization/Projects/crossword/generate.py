@@ -3,7 +3,7 @@ import copy
 
 from crossword import *
 
-sys.setrecursionlimit(10000)
+# sys.setrecursionlimit(10000)
 
 
 class CrosswordCreator():
@@ -265,10 +265,10 @@ class CrosswordCreator():
 
                 result = self.backtrack(assignment)
 
-                old_domains = copy.deepcopy(self.domains)
-                inferred = self.ac3()
-                if not inferred:
-                    self.domains = old_domains
+                # old_domains = copy.deepcopy(self.domains)
+                # inferred = self.ac3()
+                # if not inferred:
+                #     self.domains = old_domains
                 
                 if result is not None:
                     return result

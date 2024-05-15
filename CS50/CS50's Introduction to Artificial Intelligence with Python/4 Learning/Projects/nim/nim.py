@@ -13,16 +13,16 @@ class Nim():
             - `player`: 0 or 1 to indicate which player's turn
             - `winner`: None, 0, or 1 to indicate who the winner is
         """
-        self.piles = initial.copy()
+        self.piles: list = initial.copy()
         self.player = 0
         self.winner = None
 
     @classmethod
-    def available_actions(cls, piles):
+    def available_actions(cls, piles: list):
         """
         Nim.available_actions(piles) takes a `piles` list as input
         and returns all of the available actions `(i, j)` in that state.
-
+        
         Action `(i, j)` represents the action of removing `j` items
         from pile `i` (where piles are 0-indexed).
         """
@@ -46,7 +46,7 @@ class Nim():
         """
         self.player = Nim.other_player(self.player)
 
-    def move(self, action):
+    def move(self, action: tuple):
         """
         Make the move `action` for the current player.
         `action` must be a tuple `(i, j)`.
@@ -82,11 +82,11 @@ class NimAI():
          - `state` is a tuple of remaining piles, e.g. (1, 1, 4, 4)
          - `action` is a tuple `(i, j)` for an action
         """
-        self.q = dict()
-        self.alpha = alpha
-        self.epsilon = epsilon
+        self.q: dict[tuple, tuple] = dict()
+        self.alpha: float = alpha
+        self.epsilon: float = epsilon
 
-    def update(self, old_state, action, new_state, reward):
+    def update(self, old_state: tuple, action: tuple, new_state: tuple, reward):
         """
         Update Q-learning model, given an old state, an action taken
         in that state, a new resulting state, and the reward received
@@ -96,14 +96,14 @@ class NimAI():
         best_future = self.best_future_reward(new_state)
         self.update_q_value(old_state, action, old, reward, best_future)
 
-    def get_q_value(self, state, action):
+    def get_q_value(self, state: tuple, action: tuple):
         """
         Return the Q-value for the state `state` and the action `action`.
         If no Q-value exists yet in `self.q`, return 0.
         """
-        raise NotImplementedError
+        return self.q[tuple(state), tuple(action)] if (tuple(state), tuple(action)) in self.q.keys() else 0
 
-    def update_q_value(self, state, action, old_q, reward, future_rewards):
+    def update_q_value(self, state: tuple, action: tuple, old_q, reward, future_rewards):
         """
         Update the Q-value for the state `state` and the action `action`
         given the previous Q-value `old_q`, a current reward `reward`,
@@ -118,9 +118,9 @@ class NimAI():
         `alpha` is the learning rate, and `new value estimate`
         is the sum of the current reward and estimated future rewards.
         """
-        raise NotImplementedError
+        self.q[tuple(state), tuple(action)] = old_q + self.alpha * (reward + future_rewards - old_q)
 
-    def best_future_reward(self, state):
+    def best_future_reward(self, state: tuple):
         """
         Given a state `state`, consider all possible `(state, action)`
         pairs available in that state and return the maximum of all
@@ -130,9 +130,17 @@ class NimAI():
         Q-value in `self.q`. If there are no available actions in
         `state`, return 0.
         """
-        raise NotImplementedError
+        available_actions = Nim.available_actions(state)
 
-    def choose_action(self, state, epsilon=True):
+        if len(available_actions) == 0:
+            return 0
+
+        return max(
+            self.q[tuple(state), tuple(action)] if (tuple(state), tuple(action)) in self.q.keys() and len(action) != 0 else 0
+            for action in available_actions
+        )
+
+    def choose_action(self, state: tuple, epsilon=True):
         """
         Given a state `state`, return an action `(i, j)` to take.
 
@@ -147,7 +155,32 @@ class NimAI():
         If multiple actions have the same Q-value, any of those
         options is an acceptable return value.
         """
-        raise NotImplementedError
+        match epsilon:
+            case False:
+                available_actions = {
+                    action: self.get_q_value(state, action)
+                    for action in Nim.available_actions(state)
+                }
+
+                best_action = sorted(available_actions.items(), key=lambda x: x[1], reverse=True)[0][0]
+
+                return best_action
+
+            case True:
+                choose_best = random.choices([False, True], [self.epsilon, 1 - self.epsilon])[0]
+
+                action: tuple
+                if choose_best:
+                    available_actions = {
+                        action: self.get_q_value(state, action)
+                        for action in Nim.available_actions(state)
+                    }
+
+                    action = sorted(available_actions.items(), key=lambda x: x[1], reverse=True)[0][0]
+                else:
+                    action = random.choice(list(Nim.available_actions(state)))
+                
+                return action
 
 
 def train(n):

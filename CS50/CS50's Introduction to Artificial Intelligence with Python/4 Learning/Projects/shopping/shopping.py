@@ -6,6 +6,21 @@ from sklearn.neighbors import KNeighborsClassifier
 
 TEST_SIZE = 0.4
 
+MONTHS = {
+    "Jan": 0,
+    "Feb": 1,
+    "Mar": 2,
+    "Apr": 3,
+    "May": 4,
+    "June": 5,
+    "Jul": 6,
+    "Aug": 7,
+    "Sep": 8,
+    "Oct": 9,
+    "Nov": 10,
+    "Dec": 11
+}
+
 
 def main():
 
@@ -59,7 +74,31 @@ def load_data(filename):
     labels should be the corresponding list of labels, where each label
     is 1 if Revenue is true, and 0 otherwise.
     """
-    raise NotImplementedError
+    evidence = list()
+    labels = list()
+
+    with open(filename) as f:
+        reader = csv.reader(f)
+        next(reader)
+
+        for row in reader:
+            e = []
+            for i in range(17):
+                if i in [0, 2, 4, 11, 12, 13, 14]:
+                    e.append(int(row[i]))
+                elif i in [1, 3, 5, 6, 7, 8, 9]:
+                    e.append(float(row[i]))
+                elif i == 10:
+                    e.append(MONTHS[row[i]])
+                elif i == 15:
+                    e.append(1 if row[i] == "Returning_Visitor" else 0)
+                elif i == 16:
+                    e.append(1 if row[i] == "TRUE" else 0)
+            
+            evidence.append(e)
+            labels.append(1 if row[17] == "TRUE" else 0)
+    
+    return (evidence, labels)
 
 
 def train_model(evidence, labels):
@@ -67,7 +106,14 @@ def train_model(evidence, labels):
     Given a list of evidence lists and a list of labels, return a
     fitted k-nearest neighbor model (k=1) trained on the data.
     """
-    raise NotImplementedError
+    model = KNeighborsClassifier(n_neighbors=1)
+
+    model.fit(
+        X=evidence,
+        y=labels
+    )
+
+    return model
 
 
 def evaluate(labels, predictions):
@@ -85,7 +131,22 @@ def evaluate(labels, predictions):
     representing the "true negative rate": the proportion of
     actual negative labels that were accurately identified.
     """
-    raise NotImplementedError
+    positive_examples = sum(labels)
+    negative_examples = len(labels) - sum(labels)
+    
+    predictions_positive_identified = 0
+    predictions_negative_identified = 0
+
+    for label, prediction in zip(labels, predictions):
+        if label == prediction == 1:
+            predictions_positive_identified += 1
+        elif label == prediction == 0:
+            predictions_negative_identified += 1
+
+    sensivity = predictions_positive_identified / positive_examples
+    specificity = predictions_negative_identified / negative_examples
+
+    return (sensivity, specificity)
 
 
 if __name__ == "__main__":

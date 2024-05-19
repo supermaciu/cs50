@@ -19,9 +19,12 @@ x_test = x_test.reshape(
 # Create a convolutional neural network
 model = tf.keras.models.Sequential([
 
+    # Add input layer, telling the model what shape will data be
+    tf.keras.layers.Input((28, 28, 1)),
+
     # Convolutional layer. Learn 32 filters using a 3x3 kernel
     tf.keras.layers.Conv2D(
-        32, (3, 3), activation="relu", input_shape=(28, 28, 1)
+        32, (3, 3), activation="relu"
     ),
 
     # Max-pooling layer, using 2x2 pool size

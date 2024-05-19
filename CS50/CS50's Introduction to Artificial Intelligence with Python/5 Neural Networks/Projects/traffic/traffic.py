@@ -58,7 +58,27 @@ def load_data(data_dir):
     be a list of integer labels, representing the categories for each of the
     corresponding `images`.
     """
-    raise NotImplementedError
+    images = list()
+    labels = list()
+
+    NUM_CATEGORIES = len(os.listdir(data_dir))
+
+    for category in range(NUM_CATEGORIES):
+        category_path = os.listdir(data_dir + os.sep + str(category))
+        for image in category_path:
+            # Complete relative path
+            image_path = data_dir + os.sep + str(category) + os.sep + image
+
+            # Read the image and cast it to ndarray type
+            image_array = np.array(cv2.imread(image_path))
+
+            # Resize array to (IMG_WIDTH, IMG_HEIGHT, 3) shape
+            image_array = np.resize(image_array, (IMG_WIDTH, IMG_HEIGHT, 3))
+
+            images.append(image_array)
+            labels.append(category)
+
+    return (images, labels)
 
 
 def get_model():
@@ -67,7 +87,40 @@ def get_model():
     `input_shape` of the first layer is `(IMG_WIDTH, IMG_HEIGHT, 3)`.
     The output layer should have `NUM_CATEGORIES` units, one for each category.
     """
-    raise NotImplementedError
+    # Create a convolutional neural network model
+    model = tf.keras.models.Sequential([
+        # Add input layer, telling the model what shape will data be
+        tf.keras.layers.InputLayer(shape=(IMG_WIDTH, IMG_HEIGHT, 3)),
+
+        # Convolutional layer with 32 filters, 3x3 kernel, ReLU activation
+        tf.keras.layers.Conv2D(
+            32, (3, 3), activation="relu"
+        ),
+
+        # Max pooling layer with pool size 2x2
+        tf.keras.layers.AveragePooling2D(
+            pool_size=(2, 2)
+        ),
+
+        # Flattening units
+        tf.keras.layers.Flatten(),
+
+        # Add a hidden layer with dropout
+        tf.keras.layers.Dense(IMG_WIDTH*IMG_HEIGHT*3, activation="relu"),
+        tf.keras.layers.Dropout(0.25),
+
+        # Add an output layer with output units for all traffic signs
+        tf.keras.layers.Dense(NUM_CATEGORIES, activation="softmax")
+    ])
+
+    # Compile the model
+    model.compile(
+        optimizer="adam",
+        loss="categorical_crossentropy",
+        metrics=["accuracy"]
+    )
+
+    return model
 
 
 if __name__ == "__main__":

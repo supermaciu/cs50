@@ -16,10 +16,10 @@ V -> "smiled" | "tell" | "were"
 
 NONTERMINALS = """
 S -> NP VP | VP | S Conj S
-Part -> NP VP | Part Conj Part
-NP -> N | Det NP | Adv NP | NP Adv | N PP | Adj NP | Det Adj NP
+NP -> N | Det N | Adv NP | NP Adv | NP PP | AP N | Det AP N
 VP -> V | V Adv | V NP | V Adv NP | V PP | V NP PP
 PP -> P NP
+AP -> Adj | Adj AP
 """
 
 grammar = nltk.CFG.fromstring(NONTERMINALS + TERMINALS)
@@ -66,16 +66,15 @@ def preprocess(sentence: str):
     and removing any word that does not contain at least one alphabetic
     character.
     """
-    print(sentence)
-
-    words = list()
-    for word in sentence.split(" "):
-        word = word.strip(".\n").lower()
+    # Create a token list for all lowercase alphabetic strings
+    tokens = list()
+    for word in nltk.tokenize.word_tokenize(sentence):
+        word = word.lower()
 
         if word.isalpha():
-            words.append(word)
+            tokens.append(word)
 
-    return words
+    return tokens
 
 
 def np_chunk(tree):
@@ -85,8 +84,19 @@ def np_chunk(tree):
     whose label is "NP" that does not itself contain any other
     noun phrases as subtrees.
     """
-    for s in tree.subtrees(lambda t: t.height() == 4):
-        print(s)
+    # Noun phrase chunks
+    npcs = list()
+    # Get all noun phrases in sentence
+    all_nps = list(tree.subtrees(lambda t: t.label() == "NP"))
+
+    # Return only those noun phrases that have no noun phrases inside of them
+    for np in all_nps:
+        sub_nps_length = len(list(np.subtrees(lambda t: t.label() == "NP")))-1
+        
+        if sub_nps_length == 0:
+            npcs.append(np)
+
+    return npcs
 
 
 if __name__ == "__main__":

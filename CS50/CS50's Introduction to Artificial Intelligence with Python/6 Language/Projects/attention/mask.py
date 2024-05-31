@@ -47,9 +47,12 @@ def get_mask_token_index(mask_token_id, inputs):
     Return the index of the token with the specified `mask_token_id`, or
     `None` if not present in the `inputs`.
     """
-    mask_token_id_index = np.where(inputs["input_ids"].numpy() == mask_token_id)[1][0]
-
-    return mask_token_id_index if mask_token_id_index is not None else None
+    array = np.where(inputs["input_ids"].numpy() == mask_token_id)[0]
+    
+    if len(array) == 0:
+        return None
+    
+    return array[0]
 
 
 
@@ -58,8 +61,8 @@ def get_color_for_attention_score(attention_score):
     Return a tuple of three integers representing a shade of gray for the
     given `attention_score`. Each value should be in the range [0, 255].
     """
-    # TODO: Implement this function
-    raise NotImplementedError
+    value = int(attention_score * 255)
+    return (value, value, value)
 
 
 

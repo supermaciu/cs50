@@ -47,13 +47,12 @@ def get_mask_token_index(mask_token_id, inputs):
     Return the index of the token with the specified `mask_token_id`, or
     `None` if not present in the `inputs`.
     """
-    array = np.where(inputs["input_ids"].numpy() == mask_token_id)[0]
+    array = np.where(inputs["input_ids"].numpy() == mask_token_id)[1]
     
     if len(array) == 0:
         return None
     
     return array[0]
-
 
 
 def get_color_for_attention_score(attention_score):
@@ -63,7 +62,6 @@ def get_color_for_attention_score(attention_score):
     """
     value = int(attention_score * 255)
     return (value, value, value)
-
 
 
 def visualize_attentions(tokens, attentions):
@@ -76,13 +74,9 @@ def visualize_attentions(tokens, attentions):
     include both the layer number (starting count from 1) and head number
     (starting count from 1).
     """
-    # TODO: Update this function to produce diagrams for all layers and heads.
-    generate_diagram(
-        1,
-        1,
-        tokens,
-        attentions[0][0][0]
-    )
+    for i in range(len(attentions)):
+        for j in range(len(attentions[i][0])):
+            generate_diagram(i+1, j+1, tokens, attentions[i][0][j])
 
 
 def generate_diagram(layer_number, head_number, tokens, attention_weights):

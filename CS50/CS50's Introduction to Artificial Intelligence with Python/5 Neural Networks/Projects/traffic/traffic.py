@@ -94,7 +94,7 @@ def get_model():
 
         # Convolutional layer with 32 filters, 3x3 kernel, ReLU activation
         tf.keras.layers.Conv2D(
-            32, (3, 3), activation="relu"
+            16, (3, 3), activation="relu"
         ),
 
         # Max pooling layer with pool size 2x2
@@ -106,7 +106,7 @@ def get_model():
         tf.keras.layers.Flatten(),
 
         # Add a hidden layer with dropout
-        tf.keras.layers.Dense(IMG_WIDTH*IMG_HEIGHT*3, activation="relu"),
+        tf.keras.layers.Dense(int(IMG_WIDTH*IMG_HEIGHT), activation="relu"),
         tf.keras.layers.Dropout(0.25),
 
         # Add an output layer with output units for all traffic signs

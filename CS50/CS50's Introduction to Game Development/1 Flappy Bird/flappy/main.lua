@@ -155,8 +155,10 @@ end
 
 function love.update(dt)
     -- scroll our background and ground, looping back to 0 after a certain amount
-    backgroundScroll = (backgroundScroll + BACKGROUND_SCROLL_SPEED * dt) % BACKGROUND_LOOPING_POINT
-    groundScroll = (groundScroll + GROUND_SCROLL_SPEED * dt) % VIRTUAL_WIDTH
+    if not paused then
+        backgroundScroll = (backgroundScroll + BACKGROUND_SCROLL_SPEED * dt) % BACKGROUND_LOOPING_POINT
+        groundScroll = (groundScroll + GROUND_SCROLL_SPEED * dt) % VIRTUAL_WIDTH
+    end
 
     gStateMachine:update(dt)
 
@@ -169,7 +171,7 @@ function love.draw()
 
     love.graphics.draw(background, -backgroundScroll, 0)
     gStateMachine:render()
-    love.graphics.draw(ground, -groundScroll, VIRTUAL_HEIGHT - 16)
+    love.graphics.draw(ground, -groundScroll, VIRTUAL_HEIGHT - 16) 
 
     push:finish()
 end

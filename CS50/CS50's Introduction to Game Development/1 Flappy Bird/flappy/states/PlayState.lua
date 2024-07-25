@@ -17,34 +17,58 @@ PIPE_HEIGHT = 288
 BIRD_WIDTH = 38
 BIRD_HEIGHT = 24
 
+pause = love.graphics.newImage("pause.png")
+paused = false
+
 function PlayState:init()
     self.bird = Bird()
     self.pipePairs = {}
     self.timer = 0
     self.score = 0
 
+    self.pipeInterval = 2
+
     -- initialize our last recorded Y value for a gap placement to base other gaps off of
     self.lastY = -PIPE_HEIGHT + math.random(80) + 20
 end
 
 function PlayState:update(dt)
+    if love.keyboard.wasPressed("p") then
+        paused = not paused
+        
+        sounds["explosion"]:play()
+
+        if paused then
+            sounds["music"]:pause()
+        else
+            sounds["music"]:play()
+        end
+    end
+
+    if paused then return end
+
     -- update timer for pipe spawning
     self.timer = self.timer + dt
 
     -- spawn a new pipe pair every second and a half
-    if self.timer > 2 then
+    if self.timer > self.pipeInterval then
         -- modify the last Y coordinate we placed so pipe gaps aren't too far apart
         -- no higher than 10 pixels below the top edge of the screen,
-        -- and no lower than a gap length (90 pixels) from the bottom
+        -- and no lower than a gap length from the bottom
+
+        local gapHeight = math.random(8, 11) * 10
+
         local y = math.max(-PIPE_HEIGHT + 10, 
-            math.min(self.lastY + math.random(-20, 20), VIRTUAL_HEIGHT - 90 - PIPE_HEIGHT))
+            math.min(self.lastY + math.random(-20, 20), VIRTUAL_HEIGHT - gapHeight - PIPE_HEIGHT))
         self.lastY = y
 
         -- add a new pipe pair at the end of the screen at our new Y
-        table.insert(self.pipePairs, PipePair(y))
+        table.insert(self.pipePairs, PipePair(y, gapHeight))
 
         -- reset timer
         self.timer = 0
+
+        self.pipeInterval = math.random() * 2 + 2
     end
 
     -- for every pair of pipes..
@@ -110,6 +134,10 @@ function PlayState:render()
     love.graphics.print('Score: ' .. tostring(self.score), 8, 8)
 
     self.bird:render()
+
+    if paused then
+        love.graphics.draw(pause, VIRTUAL_WIDTH/2-32*2, VIRTUAL_HEIGHT/2-32*2, 0, 2, 2)
+    end
 end
 
 --[[

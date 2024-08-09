@@ -56,7 +56,9 @@ function love.load()
         ['main'] = love.graphics.newImage('graphics/breakout.png'),
         ['arrows'] = love.graphics.newImage('graphics/arrows.png'),
         ['hearts'] = love.graphics.newImage('graphics/hearts.png'),
-        ['particle'] = love.graphics.newImage('graphics/particle.png')
+        ['particle'] = love.graphics.newImage('graphics/particle.png'),
+
+        ['powerups'] = love.graphics.newImage('graphics/powerups.png')
     }
 
     -- Quads we will generate for all of our textures; Quads allow us
@@ -66,7 +68,9 @@ function love.load()
         ['paddles'] = GenerateQuadsPaddles(gTextures['main']),
         ['balls'] = GenerateQuadsBalls(gTextures['main']),
         ['bricks'] = GenerateQuadsBricks(gTextures['main']),
-        ['hearts'] = GenerateQuads(gTextures['hearts'], 10, 9)
+        ['hearts'] = GenerateQuads(gTextures['hearts'], 10, 9),
+
+        ['powerups'] = GenerateQuads(gTextures['powerups'], 16, 16)
     }
     
     -- initialize our virtual resolution, which will be rendered within our

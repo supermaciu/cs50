@@ -75,3 +75,9 @@ function Paddle:render()
     love.graphics.draw(gTextures['main'], gFrames['paddles'][self.size + 4 * (self.skin - 1)],
         self.x, self.y)
 end
+
+
+function Paddle:changeSize(size)
+    self.size = size
+    _, _, self.width, self.height = gFrames['paddles'][self.size + 4 * (self.skin - 1)]:getViewport()
+end

@@ -31,7 +31,7 @@ function PlayState:enter(params)
     self.balls = params.balls
     self.level = params.level
 
-    self.recoverPoints = 5000
+    self.recoverPoints = 2500
 
     -- give ball random starting velocity
     for i, ball in pairs(self.balls) do
@@ -114,6 +114,9 @@ function PlayState:update(dt)
 
                     -- play recover sound effect
                     gSounds['recover']:play()
+
+                    -- upgrade size
+                    self.paddle:changeSize(math.min(4, self.paddle.size+1))
                 end
 
                 -- go to our victory screen if there are no more bricks left
@@ -215,6 +218,9 @@ function PlayState:update(dt)
                         recoverPoints = self.recoverPoints
                     })
                 end
+
+                -- decrease paddle size
+                self.paddle:changeSize(math.max(1, self.paddle.size-1))
             end
         end
     end

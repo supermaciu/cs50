@@ -30,8 +30,7 @@ function PlayState:enter(params)
     self.highScores = params.highScores
     self.balls = params.balls
     self.level = params.level
-
-    self.recoverPoints = 2500
+    self.recoverPoints = params.recoverPoints
 
     -- give ball random starting velocity
     for i, ball in pairs(self.balls) do
@@ -93,7 +92,6 @@ function PlayState:update(dt)
 
     -- detect collision across all bricks with the ball
     for k, brick in pairs(self.bricks) do
-
         for i, ball in pairs(self.balls) do
             -- only check collision if we're in play
             if brick.inPlay and ball:collides(brick) then
@@ -105,12 +103,12 @@ function PlayState:update(dt)
                 brick:hit()
 
                 -- if we have enough points, recover a point of health
-                if self.score > self.recoverPoints then
+                if self.score >= self.recoverPoints then
                     -- can't go above 3 health
                     self.health = math.min(3, self.health + 1)
 
                     -- multiply recover points by 2
-                    self.recoverPoints = self.recoverPoints + math.min(100000, self.recoverPoints * 2)
+                    self.recoverPoints = math.min(100000, self.recoverPoints * 2)
 
                     -- play recover sound effect
                     gSounds['recover']:play()

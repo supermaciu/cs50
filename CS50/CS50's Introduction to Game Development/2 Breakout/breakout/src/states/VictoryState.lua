@@ -58,6 +58,6 @@ function VictoryState:render()
 
     -- instructions text
     love.graphics.setFont(gFonts['medium'])
-    love.graphics.printf('Press Enter to serve!', 0, VIRTUAL_HEIGHT / 2,
+    love.graphics.printf('Press Enter to proceed!', 0, VIRTUAL_HEIGHT / 2,
         VIRTUAL_WIDTH, 'center')
 end

@@ -14,6 +14,8 @@
 
 PaddleSelectState = Class{__includes = BaseState}
 
+START_RECOVER_POINTS = 2500
+
 function PaddleSelectState:enter(params)
     self.highScores = params.highScores
 end
@@ -52,7 +54,7 @@ function PaddleSelectState:update(dt)
             score = 0,
             highScores = self.highScores,
             level = 1,
-            recoverPoints = 5000
+            recoverPoints = START_RECOVER_POINTS
         })
     end
 

@@ -306,3 +306,11 @@ function renderScore(score)
     love.graphics.print('Score:', VIRTUAL_WIDTH - 60, 5)
     love.graphics.printf(tostring(score), VIRTUAL_WIDTH - 50, 5, 40, 'right')
 end
+
+function renderPowerupsCollected(powerupsCollected)
+    local powerupsCollectedY = VIRTUAL_HEIGHT - 16
+
+    for i, powerupCollected in pairs(powerupsCollected) do
+        love.graphics.draw(gTextures['powerups'], gFrames['powerups'][powerupCollected], 18*(i-1), powerupsCollectedY)
+    end
+end

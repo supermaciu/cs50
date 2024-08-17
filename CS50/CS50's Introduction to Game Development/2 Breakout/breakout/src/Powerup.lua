@@ -1,20 +1,14 @@
 Powerup = Class{}
 
-function Powerup:init()
-    -- simple positional and dimensional variables
+function Powerup:init(powerupType)
     self.width = 16
     self.height = 16
 
     self.x = math.random(0, VIRTUAL_WIDTH-self.width)
     self.y = -self.height
 
-    -- these variables are for keeping track of our velocity on both the
-    -- X and Y axis, since the ball can move in two dimensions
     self.dy = 50
-
-    -- this will effectively be the color of our ball, and we will index
-    -- our table of Quads relating to the global block texture using this
-    self.powerupType = 9
+    self.powerupType = powerupType
 end
 
 --[[

@@ -63,6 +63,8 @@ function Brick:init(x, y)
     -- used to determine whether this brick should be rendered
     self.inPlay = true
 
+    self.locked = false
+
     -- particle system belonging to the brick, emitted on hit
     self.psystem = love.graphics.newParticleSystem(gTextures['particle'], 64)
 
@@ -106,19 +108,23 @@ function Brick:hit()
 
     -- if we're at a higher tier than the base, we need to go down a tier
     -- if we're already at the lowest color, else just go down a color
-    if self.tier > 0 then
-        if self.color == 1 then
-            self.tier = self.tier - 1
-            self.color = 5
-        else
-            self.color = self.color - 1
-        end
+    if self.locked then
+        self.inPlay = false
     else
-        -- if we're in the first tier and the base color, remove brick from play
-        if self.color == 1 then
-            self.inPlay = false
+        if self.tier > 0 then
+            if self.color == 1 then
+                self.tier = self.tier - 1
+                self.color = 5
+            else
+                self.color = self.color - 1
+            end
         else
-            self.color = self.color - 1
+            -- if we're in the first tier and the base color, remove brick from play
+            if self.color == 1 then
+                self.inPlay = false
+            else
+                self.color = self.color - 1
+            end
         end
     end
 
@@ -135,11 +141,15 @@ end
 
 function Brick:render()
     if self.inPlay then
-        love.graphics.draw(gTextures['main'], 
+        if self.locked then
+            love.graphics.draw(gTextures['main'], gFrames['bricks'][22], self.x, self.y)
+        else
+            love.graphics.draw(gTextures['main'], 
             -- multiply color by 4 (-1) to get our color offset, then add tier to that
             -- to draw the correct tier and color brick onto the screen
             gFrames['bricks'][1 + ((self.color - 1) * 4) + self.tier],
             self.x, self.y)
+        end
     end
 end
 

@@ -55,7 +55,9 @@ end
     we have to return a subset of GenerateQuads.
 ]]
 function GenerateQuadsBricks(atlas)
-    return table.slice(GenerateQuads(atlas, 32, 16), 1, 21)
+    local quads = table.slice(GenerateQuads(atlas, 32, 16), 1, 21)
+    quads[#quads+1] = GenerateQuads(atlas, 32, 16)[24] -- locked brick
+    return quads
 end
 
 --[[

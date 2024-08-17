@@ -16,7 +16,8 @@
 
 PlayState = Class{__includes = BaseState}
 
-POWERUP_SPAWN_THRESHOLD = 10
+POWERUP_SPAWN_HIT_THRESHOLD = 20
+POWERUP_SPAWN_TIME = 10 -- made to fix softlock when there is only locked bricks
 
 --[[
     We initialize what's in our PlayState via a state table that we pass between
@@ -32,17 +33,26 @@ function PlayState:enter(params)
     self.level = params.level
     self.recoverPoints = params.recoverPoints
 
+    self.powerupsCollected = params.powerupsCollected
+
     -- give ball random starting velocity
     for i, ball in pairs(self.balls) do
         ball.dx = math.random(-200, 200)
         ball.dy = math.random(-50, -60)
     end
 
-    self.powerups = {}
+    self.powerupsFalling = {}
     self.brickHits = 0
+    self.powerupTimer = 0
 end
 
 function PlayState:update(dt)
+    self.powerupTimer = self.powerupTimer + dt
+    if self.powerupTimer >= POWERUP_SPAWN_TIME then
+        self:spawnPowerup()
+        self.powerupTimer = 0
+    end
+
     if self.paused then
         if love.keyboard.wasPressed('space') then
             self.paused = false
@@ -62,8 +72,8 @@ function PlayState:update(dt)
         ball:update(dt)
     end
 
-    -- update powerups
-    for i, powerup in pairs(self.powerups) do
+    -- update powerupsFalling
+    for i, powerup in pairs(self.powerupsFalling) do
         powerup:update(dt)
     end
 
@@ -96,14 +106,17 @@ function PlayState:update(dt)
             -- only check collision if we're in play
             if brick.inPlay and ball:collides(brick) then
 
-                -- add to score
-                self.score = self.score + (brick.tier * 200 + brick.color * 25)
-
-                -- trigger the brick's hit function, which removes it from play
-                brick:hit()
+                if brick.locked and self:countKeyPowerupsCollected() > 0 then
+                    self.score = self.score + 1000
+                    table.remove(self.powerupsCollected, table.find(self.powerupsCollected, 10))
+                    brick:hit()
+                elseif not brick.locked then
+                    self.score = self.score + (brick.tier * 200 + brick.color * 25)
+                    brick:hit()
+                end
 
                 -- if we have enough points, recover a point of health
-                if self.score >= self.recoverPoints then
+                if self.score >= self.recoverPoints and (self.paddle.size < 4 or self.health < 3) then
                     -- can't go above 3 health
                     self.health = math.min(3, self.health + 1)
 
@@ -178,10 +191,9 @@ function PlayState:update(dt)
                 end
 
                 -- spawn a powerup if hit enough times
-                self.brickHits = self.brickHits + 1
-                if self.brickHits >= POWERUP_SPAWN_THRESHOLD then
-                    table.insert(self.powerups, Powerup())
-                    self.brickHits = 0
+                self.brickHits = brick.locked and self.brickHits or self.brickHits + 1
+                if self.brickHits >= POWERUP_SPAWN_HIT_THRESHOLD then
+                    self:spawnPowerup()
                 end
 
                 -- only allow colliding with one brick, for corners
@@ -213,7 +225,8 @@ function PlayState:update(dt)
                         score = self.score,
                         highScores = self.highScores,
                         level = self.level,
-                        recoverPoints = self.recoverPoints
+                        recoverPoints = self.recoverPoints,
+                        powerupsCollected = self.powerupsCollected
                     })
                 end
 
@@ -227,11 +240,11 @@ function PlayState:update(dt)
         table.remove(self.balls, table.find(self.balls, ball))
     end
 
-    local powerupsToRemove = {}
-    for i, powerup in pairs(self.powerups) do
-        if powerup:collides(self.paddle) then
-            -- more balls powerup
-            if powerup.powerupType == 9 then
+    local powerupsFallingToRemove = {}
+    for i, powerupFalling in pairs(self.powerupsFalling) do
+        if powerupFalling:collides(self.paddle) then
+            if powerupFalling.powerupType == 9 then
+                -- more balls powerup
                 for i=1, 2 do
                     local newBall = Ball(math.random(7))
                     newBall:reset()
@@ -239,15 +252,18 @@ function PlayState:update(dt)
                     newBall.dy = math.random(-50, -60)
                     table.insert(self.balls, newBall)
                 end
+            elseif powerupFalling.powerupType == 10 then
+                -- key for locked brick
+                table.insert(self.powerupsCollected, 10)
             end
 
-            table.insert(powerupsToRemove, powerup)
+            table.insert(powerupsFallingToRemove, powerupFalling)
             gSounds['score']:play()
         end
     end
 
-    for i, powerup in pairs(powerupsToRemove) do
-        table.remove(self.powerups, table.find(self.powerups, powerup))
+    for i, powerupFalling in pairs(powerupsFallingToRemove) do
+        table.remove(self.powerupsFalling, table.find(self.powerupsFalling, powerupFalling))
     end
 
     -- for rendering particle systems
@@ -276,13 +292,14 @@ function PlayState:render()
         ball:render()
     end
 
-    -- update powerups
-    for i, powerup in pairs(self.powerups) do
-        powerup:render()
+    -- update powerupsFalling
+    for i, powerupFalling in pairs(self.powerupsFalling) do
+        powerupFalling:render()
     end
 
     renderScore(self.score)
     renderHealth(self.health)
+    renderPowerupsCollected(self.powerupsCollected)
 
     -- pause text, if paused
     if self.paused then
@@ -299,4 +316,51 @@ function PlayState:checkVictory()
     end
 
     return true
+end
+
+function PlayState:countLockedBricks()
+    local count = 0
+
+    for k, brick in pairs(self.bricks) do
+        if brick.inPlay and brick.locked then
+            count = count + 1
+        end 
+    end
+
+    return count
+end
+
+function PlayState:countKeyPowerupsCollected()
+    local count = 0
+
+    for i, powerupCollected in pairs(self.powerupsCollected) do
+        if powerupCollected == 10 then
+            count = count + 1
+        end
+    end
+
+    return count
+end
+
+function PlayState:countKeyPowerupsFalling()
+    local count = 0
+
+    for i, powerupFalling in pairs(self.powerupsFalling) do
+        if powerupFalling.powerupType == 10 then
+            count = count + 1
+        end
+    end
+
+    return count
+end
+
+function PlayState:spawnPowerup()
+    local powerUpOptions = {9}
+
+    if self:countKeyPowerupsCollected() < self:countLockedBricks() and self:countKeyPowerupsFalling() < self:countLockedBricks() then
+        table.insert(powerUpOptions, 10)
+    end
+
+    table.insert(self.powerupsFalling, Powerup(powerUpOptions[math.random(1, #powerUpOptions)]))
+    self.brickHits = 0
 end

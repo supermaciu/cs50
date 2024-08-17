@@ -23,6 +23,8 @@ ALTERNATE = 2       -- alternate colors
 SKIP = 3            -- skip every other block
 NONE = 4            -- no blocks this row
 
+LOCKED_BRICK_CHANCE = 0.02
+
 LevelMaker = Class{}
 
 --[[
@@ -84,6 +86,8 @@ function LevelMaker.createMap(level)
                 skipFlag = not skipFlag
             end
 
+            local lockedFlag = math.random(1 / LOCKED_BRICK_CHANCE) == 1 and true or false
+
             b = Brick(
                 -- x-coordinate
                 (x-1)                   -- decrement x by 1 because tables are 1-indexed, coords are 0
@@ -110,7 +114,14 @@ function LevelMaker.createMap(level)
             if not alternatePattern then
                 b.color = solidColor
                 b.tier = solidTier
-            end 
+            end
+
+            -- if locked
+            if lockedFlag then
+                b.color = 5
+                b.tier = 0
+                b.locked = true
+            end
 
             table.insert(bricks, b)
 

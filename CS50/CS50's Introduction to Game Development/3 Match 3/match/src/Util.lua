@@ -46,6 +46,22 @@ function GenerateTileQuads(atlas)
     return tiles
 end
 
+function GenerateShineQuads(atlas)
+    local tiles = {}
+
+    local x = 0
+    local y = 0
+
+    for i = 1, 6 do
+        table.insert(tiles, love.graphics.newQuad(
+            x, y, 32, 32, atlas:getDimensions()
+        ))
+        x = x + 32
+    end
+
+    return tiles
+end
+
 --[[
     Recursive table printing function.
     https://coronalabs.com/blog/2014/09/02/tutorial-printing-table-contents/

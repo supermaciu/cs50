@@ -122,7 +122,3 @@ function love.draw()
     gStateMachine:render()
     push:finish()
 end
-
-function love.conf(t)
-    t.console = true
-end

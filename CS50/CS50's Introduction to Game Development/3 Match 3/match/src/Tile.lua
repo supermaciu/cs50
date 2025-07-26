@@ -13,7 +13,7 @@
 
 Tile = Class{}
 
-function Tile:init(x, y, color, variety)
+function Tile:init(x, y, color, variety, shiny)
     
     -- board positions
     self.gridX = x
@@ -26,6 +26,9 @@ function Tile:init(x, y, color, variety)
     -- tile appearance/points
     self.color = color
     self.variety = variety
+
+    self.shiny = shiny
+    self.shinePhase = shiny and math.random(6) or 0
 end
 
 function Tile:render(x, y)
@@ -34,9 +37,15 @@ function Tile:render(x, y)
     love.graphics.setColor(34, 32, 52, 255)
     love.graphics.draw(gTextures['main'], gFrames['tiles'][self.color][self.variety],
         self.x + x + 2, self.y + y + 2)
-
+    
     -- draw tile itself
     love.graphics.setColor(255, 255, 255, 255)
     love.graphics.draw(gTextures['main'], gFrames['tiles'][self.color][self.variety],
         self.x + x, self.y + y)
+
+    -- draw shine
+    if self.shiny and self.shinePhase ~= 0 then
+        love.graphics.draw(gTextures['shine'], gFrames["shines"][self.shinePhase],
+        self.x + x, self.y + y)
+    end
 end

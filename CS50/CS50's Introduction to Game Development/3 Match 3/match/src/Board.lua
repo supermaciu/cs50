@@ -33,7 +33,7 @@ function Board:initializeTiles()
         for tileX = 1, 8 do
             
             -- create a new tile at X,Y with a random color and variety
-            table.insert(self.tiles[tileY], Tile(tileX, tileY, math.random(18), math.random(math.max(self.level-2, 1), math.min(self.level, 6))))
+            table.insert(self.tiles[tileY], self:newTile(tileX, tileY))
         end
     end
 
@@ -64,6 +64,8 @@ function Board:calculateMatches()
         
         -- every horizontal tile
         for x = 2, 8 do
+
+            local shiny = false
             
             -- if this is the same color as the one we're trying to match...
             if self.tiles[y][x].color == colorToMatch then
@@ -80,8 +82,18 @@ function Board:calculateMatches()
                     -- go backwards from here by matchNum
                     for x2 = x - 1, x - matchNum, -1 do
                         
-                        -- add each tile to the match that's in that match
-                        table.insert(match, self.tiles[y][x2])
+                        -- check if a shiny is matched
+                        if self.tiles[y][x2].shiny == true then
+                            match = {}
+                            for x3 = 1, 8 do
+                                table.insert(match, self.tiles[y][x3])
+                            end
+                            shiny = true
+                            break
+                        else
+                            -- add each tile to the match that's in that match
+                            table.insert(match, self.tiles[y][x2])
+                        end
                     end
 
                     -- add this match to our total matches table
@@ -91,7 +103,7 @@ function Board:calculateMatches()
                 matchNum = 1
 
                 -- don't need to check last two if they won't be in a match
-                if x >= 7 then
+                if x >= 7 or shiny then
                     break
                 end
             end
@@ -118,6 +130,9 @@ function Board:calculateMatches()
 
         -- every vertical tile
         for y = 2, 8 do
+
+            local shiny = false
+
             if self.tiles[y][x].color == colorToMatch then
                 matchNum = matchNum + 1
             else
@@ -127,7 +142,17 @@ function Board:calculateMatches()
                     local match = {}
 
                     for y2 = y - 1, y - matchNum, -1 do
-                        table.insert(match, self.tiles[y2][x])
+                        -- check if a shiny is matched
+                        if self.tiles[y2][x].shiny == true then
+                            match = {}
+                            for y3 = 1, 8 do
+                                table.insert(match, self.tiles[y3][x])
+                            end
+                            shiny = true
+                            break
+                        else
+                            table.insert(match, self.tiles[y2][x])
+                        end
                     end
 
                     table.insert(matches, match)
@@ -136,7 +161,7 @@ function Board:calculateMatches()
                 matchNum = 1
 
                 -- don't need to check last two if they won't be in a match
-                if y >= 7 then
+                if y >= 7 or shiny then
                     break
                 end
             end
@@ -241,7 +266,7 @@ function Board:getFallingTiles()
             if not tile then
 
                 -- new tile with random color and variety
-                local tile = Tile(x, y, math.random(18), math.random(math.max(self.level-2, 1), math.min(self.level, 6)))
+                local tile = self:newTile(x, y)
                 tile.y = -32
                 self.tiles[y][x] = tile
 
@@ -254,6 +279,11 @@ function Board:getFallingTiles()
     end
 
     return tweens
+end
+
+function Board:newTile(x, y)
+    return Tile(x, y, math.random(18), math.random(math.max(self.level-2, 1), 
+        math.min(self.level, 6)), (math.random(100) <= 10))
 end
 
 function Board:render()

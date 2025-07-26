@@ -63,6 +63,15 @@ function PlayState:enter(params)
     -- spawn a board and place it toward the right
     self.board = params.board or Board(VIRTUAL_WIDTH - 272, 16, self.level)
 
+    -- shine tiles animation
+    Timer.every(0.25, function()
+        for _, row in pairs(self.board.tiles) do
+            for _, tile in pairs(row) do
+                tile.shinePhase = (tile.shinePhase + 1) % 7
+            end
+        end
+    end)
+
     -- grab score from params if it was passed
     self.score = params.score or 0
 
@@ -122,7 +131,8 @@ function PlayState:update(dt)
         end
 
         -- if we've pressed enter, to select or deselect a tile...
-        if love.keyboard.wasPressed('enter') or love.keyboard.wasPressed('return') then
+        if love.keyboard.wasPressed('enter') or love.keyboard.wasPressed("space")
+            or love.keyboard.wasPressed('return') then
             
             -- if same tile as currently highlighted, deselect
             local x = self.boardHighlightX + 1
